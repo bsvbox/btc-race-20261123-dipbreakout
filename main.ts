@@ -122,9 +122,11 @@ function onBatch(state: BarsState, batch: Batch): OrderInput[] {
   if (!dipped && !brokeOut) return [];
 
   // Full-size buy: every unit of cash. The cap is 100% of equity and the
-  // position is empty, so cash is the whole room.
+  // position is empty, so cash is the whole room. Never send a buy below
+  // the $1 minimum notional (1,000,000 quote units): after fees the cash
+  // could be small, and a sub-minimum buy is rejected, not partially filled.
   const notional = state.cash < state.weightRoom(SYMBOL) ? state.cash : state.weightRoom(SYMBOL);
-  if (notional <= 0n) return [];
+  if (notional < 1_000_000n) return [];
   return [
     {
       side: "buy",
